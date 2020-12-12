@@ -13,30 +13,13 @@ godot_init!(init);
 #[derive(NativeClass)]
 #[inherit(Control)]
 pub struct L {
-    rx: Receiver<Message>,
+    rx: Receiver<InternalMessage>,
     sender: EventSender<Event>,
     map: std::collections::HashMap<Endpoint, String>,
 }
 
-pub struct ChatMessage {
-    pub user: String,
-    pub message_type: MessageType,
-}
-pub enum MessageType {
-    Connection,
-    Disconnection,
-    Text(String),
-}
-
 fn init(handle: InitHandle) {
     handle.add_class::<L>();
-}
-
-#[derive(Serialize, Deserialize)]
-pub enum NetMessage {
-    HelloLan(String, u16), // user_name, server_port
-    HelloUser(String),     // user_name
-    UserMessage(String),   // content
 }
 
 impl L {
@@ -50,11 +33,6 @@ impl L {
     }
 }
 
-pub enum Message {
-    User(Endpoint, String),
-    Content(Endpoint, String),
-}
-
 #[methods]
 impl L {
     #[export]
@@ -66,10 +44,10 @@ impl L {
     fn _process(&mut self, _owner: &Control, _delta: f64) {
         if let Ok(i) = self.rx.try_recv() {
             match i {
-                Message::User(endpoint, user) => {
+                InternalMessage::User(endpoint, user) => {
                     self.map.insert(endpoint, user);
                 }
-                Message::Content(endpoint, message) => {
+                InternalMessage::Content(endpoint, message) => {
                     let m = format!("{}: {}\n", self.map[&endpoint], message);
 
                     unsafe {
@@ -130,18 +108,31 @@ impl L {
                     .unwrap()
                     .add_text(m);
             }
-            self.sender.send(Event::SendMsg(text.to_string()));
+            self.sender
+                .send(Event::SendUiMsgToNetwork(text.to_string()));
         }
     }
 }
 
+#[derive(Serialize, Deserialize)]
+pub enum NetMessage {
+    HelloLan(String, u16), // user_name, server_port
+    HelloUser(String),     // user_name
+    UserMessage(String),   // content
+}
+
+pub enum InternalMessage {
+    User(Endpoint, String),
+    Content(Endpoint, String),
+}
+
 pub enum Event {
-    SendMsg(String),
+    SendUiMsgToNetwork(String),
     Network(NetEvent<NetMessage>),
     Close(Option<()>),
 }
 
-pub fn run() -> Result<(Receiver<Message>, EventSender<Event>)> {
+pub fn run() -> Result<(Receiver<InternalMessage>, EventSender<Event>)> {
     let mut event_queue = EventQueue::new();
     let sender = event_queue.sender().clone();
     let mut network = Network::new(move |net_event| sender.send(Event::Network(net_event)));
@@ -157,9 +148,10 @@ pub fn run() -> Result<(Receiver<Message>, EventSender<Event>)> {
     let (tx, rx) = channel();
     let mut eps = std::collections::HashSet::new();
     let sender = event_queue.sender().clone();
+
     std::thread::spawn(move || loop {
         match event_queue.receive() {
-            Event::SendMsg(msg) => {
+            Event::SendUiMsgToNetwork(msg) => {
                 godot_print!("{}", &msg);
                 godot_print!("{:?}", &eps);
                 network.send_all(&eps, NetMessage::UserMessage(msg));
@@ -177,7 +169,7 @@ pub fn run() -> Result<(Receiver<Message>, EventSender<Event>)> {
                                 let message = NetMessage::HelloUser("Test".to_string());
                                 network.send(user_endpoint, message);
                                 eps.insert(user_endpoint);
-                                tx.send(Message::User(user_endpoint, user)).unwrap();
+                                tx.send(InternalMessage::User(user_endpoint, user)).unwrap();
                                 Ok(())
                             };
                             try_connect().unwrap();
@@ -187,7 +179,8 @@ pub fn run() -> Result<(Receiver<Message>, EventSender<Event>)> {
                             eps.insert(endpoint);
                         }
                         NetMessage::UserMessage(content) => {
-                            tx.send(Message::Content(endpoint, content)).unwrap();
+                            tx.send(InternalMessage::Content(endpoint, content))
+                                .unwrap();
                         }
                     }
                 }
