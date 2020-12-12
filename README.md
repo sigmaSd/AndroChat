@@ -1,6 +1,6 @@
 # AndroChat
 <img src="./androchat.png" width="200%" height="60%">
-It also communicate with https://github.com/lemunozm/termchat/
+It can also communicate with https://github.com/lemunozm/termchat/
 
 
 # How To Build
