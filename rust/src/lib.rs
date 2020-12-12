@@ -9,6 +9,9 @@ use std::sync::mpsc::*;
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
 godot_init!(init);
+fn init(handle: InitHandle) {
+    handle.add_class::<L>();
+}
 
 #[derive(NativeClass)]
 #[inherit(Control)]
@@ -16,10 +19,6 @@ pub struct L {
     rx: Receiver<InternalMessage>,
     sender: EventSender<Event>,
     map: std::collections::HashMap<Endpoint, String>,
-}
-
-fn init(handle: InitHandle) {
-    handle.add_class::<L>();
 }
 
 impl L {
@@ -63,6 +62,7 @@ impl L {
             }
         }
     }
+
     #[export]
     fn _input(&mut self, _owner: &Control, event: Ref<InputEvent>) {
         let ev = unsafe {
@@ -134,14 +134,17 @@ pub enum Event {
 
 pub fn run() -> Result<(Receiver<InternalMessage>, EventSender<Event>)> {
     let mut event_queue = EventQueue::new();
+
     let sender = event_queue.sender().clone();
     let mut network = Network::new(move |net_event| sender.send(Event::Network(net_event)));
-    let server_addr: std::net::SocketAddrV4 = "0.0.0.0:0".parse().unwrap();
-    let discovery_addr: std::net::SocketAddrV4 = "238.255.0.1:5877".parse().unwrap();
-    let (_, server_addr) = network.listen_tcp(server_addr)?;
-    network.listen_udp_multicast(discovery_addr)?;
 
+    let server_addr: std::net::SocketAddrV4 = "0.0.0.0:0".parse().unwrap();
+    let (_, server_addr) = network.listen_tcp(server_addr)?;
+
+    let discovery_addr: std::net::SocketAddrV4 = "238.255.0.1:5877".parse().unwrap();
+    network.listen_udp_multicast(discovery_addr)?;
     let discovery_endpoint = network.connect_udp(discovery_addr)?;
+
     let message = NetMessage::HelloLan("Test".to_string(), server_addr.port());
     network.send(discovery_endpoint, message);
 
