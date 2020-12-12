@@ -1,0 +1,7 @@
+[gd_resource type="GDNativeLibrary" format=2]
+
+[resource]
+entry/Android.arm64-v8a = "res://librustandro.so"
+entry/X11.64 = "res://librust.so"
+dependency/Android.arm64-v8a = [  ]
+dependency/X11.64 = [  ]

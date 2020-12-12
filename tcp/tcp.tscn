@@ -1,0 +1,27 @@
+[gd_scene load_steps=2 format=2]
+
+[ext_resource path="res://control.gdns" type="Script" id=2]
+
+[node name="Node2D" type="Control"]
+script = ExtResource( 2 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="RichTextLabel" type="RichTextLabel" parent="."]
+margin_left = 32.4847
+margin_top = 15.0135
+margin_right = 376.485
+margin_bottom = 174.014
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="TextEdit" type="TextEdit" parent="."]
+margin_left = 44.5051
+margin_top = 209.986
+margin_right = 357.505
+margin_bottom = 369.986
+__meta__ = {
+"_edit_use_anchors_": false
+}

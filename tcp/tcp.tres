@@ -1,0 +1,7 @@
+[gd_resource type="GDNativeLibrary" format=2]
+
+[resource]
+entry/Android.x86_64 = "res://librust.so"
+entry/X11.64 = "res://librust.so"
+dependency/Android.x86_64 = [  ]
+dependency/X11.64 = [  ]
