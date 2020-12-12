@@ -1,2 +1,2 @@
-./logs
-./tcp/librust.so
+logs
+tcp/librust.so
