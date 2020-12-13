@@ -1,2 +1,5 @@
 logs
 tcp/librust.so
+tcp/librustandro.so
+tcp/librustandrorelease.so
+tcp/tcp.apk
