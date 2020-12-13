@@ -17,7 +17,6 @@ _global_script_class_icons={
 
 config/name="tcp"
 run/main_scene="res://tcp.tscn"
-config/icon="res://icon.png"
 
 [display]
 

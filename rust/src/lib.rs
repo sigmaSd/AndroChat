@@ -47,6 +47,9 @@ impl L {
                     self.map.insert(endpoint, user);
                 }
                 InternalMessage::Content(endpoint, message) => {
+                    if !self.map.contains_key(&endpoint) {
+                        self.map.insert(endpoint, "X".into());
+                    }
                     let m = format!("{}: {}\n", self.map[&endpoint], message);
 
                     unsafe {
